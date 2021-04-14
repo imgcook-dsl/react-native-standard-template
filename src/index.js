@@ -18,15 +18,15 @@ module.exports = function(schema, option) {
   };
 
   const toString = (value) => {
-    if ({}.toString.call(value) === "[object Function]") {
+    if ({}.toString.call(value) === '[object Function]') {
       return value.toString();
     }
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       return value;
     }
-    if (typeof value === "object") {
+    if (typeof value === 'object') {
       return JSON.stringify(value, (key, value) => {
-        if (typeof value === "function") {
+        if (typeof value === 'function') {
           return value.toString();
         } else {
           return value;
@@ -39,7 +39,7 @@ module.exports = function(schema, option) {
 
   // convert to responsive unit, such as vw
   const parseStyle = (style, componentName) => {
-    if (componentName === "text") {
+    if (componentName === 'text') {
       delete style.width;
       delete style.height;
       delete style.maxWidth;
@@ -47,43 +47,43 @@ module.exports = function(schema, option) {
 
     for (let key in style) {
       switch (key) {
-        case "fontWeight":
+        case 'fontWeight':
           if (style[key] == 400) {
             delete style[key];
           } else {
             style[key] = String(style[key]);
           }
           break;
-        case "fontSize":
+        case 'fontSize':
           if (style[key] == 14) {
             delete style[key];
           } else {
-            style[key] = parseFloat(style[key])
+            style[key] = parseFloat(style[key]);
           }
           break;
-        case "color":
-          if (style[key] === "#333333") {
+        case 'color':
+          if (style[key] === '#333333') {
             delete style[key];
           }
           break;
-        case "display":
-          if (style[key] === "flex") {
+        case 'display':
+          if (style[key] === 'flex') {
             delete style[key];
           }
           break;
-        case "flexDirection":
-          if (style[key] === "column") {
+        case 'flexDirection':
+          if (style[key] === 'column') {
             delete style[key];
           }
           break;
-        case "opacity":
+        case 'opacity':
           style[key] = Number(style[key]);
           break;
-        case "boxSizing":
-        case "boxShadow":
-        case "overflow":
-        case "textOverflow":
-        case "whiteSpace":
+        case 'boxSizing':
+        case 'boxShadow':
+        case 'overflow':
+        case 'textOverflow':
+        case 'whiteSpace':
           delete style[key];
           break;
         default:
@@ -100,7 +100,7 @@ module.exports = function(schema, option) {
   const parseFunction = (func) => {
     const funcString = func.toString();
     const params = funcString.match(/\([^\(\)]*\)/)[0].slice(1, -1);
-    const content = funcString.slice(funcString.indexOf("{") + 1, funcString.lastIndexOf("}"));
+    const content = funcString.slice(funcString.indexOf('{') + 1, funcString.lastIndexOf('}'));
     return {
       params,
       content
@@ -109,7 +109,7 @@ module.exports = function(schema, option) {
 
   // parse layer props(static values or expression)
   const parseProps = (value, isReactNode) => {
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       if (isExpression(value)) {
         if (isReactNode) {
           return value.slice(1, -1);
@@ -123,7 +123,7 @@ module.exports = function(schema, option) {
       } else {
         return `'${value}'`;
       }
-    } else if (typeof value === "function") {
+    } else if (typeof value === 'function') {
       const { params, content } = parseFunction(value);
       return `(${params}) => {${content}}`;
     }
@@ -137,14 +137,16 @@ module.exports = function(schema, option) {
     let payload = {};
 
     Object.keys(data.options).forEach((key) => {
-      if (["uri", "method", "params"].indexOf(key) === -1) {
+      if ([ 'uri', 'method', 'params' ].indexOf(key) === -1) {
         payload[key] = toString(data.options[key]);
       }
     });
 
     // params parse should in string template
     if (params) {
-      payload = `${toString(payload).slice(0, -1)} ,body: ${isExpression(params) ? parseProps(params) : toString(params)}}`;
+      payload = `${toString(payload).slice(0, -1)} ,body: ${isExpression(params)
+        ? parseProps(params)
+        : toString(params)}}`;
     } else {
       payload = toString(payload);
     }
@@ -163,16 +165,16 @@ module.exports = function(schema, option) {
       `;
     }
 
-    result += "}";
+    result += '}';
 
     return `function ${name}() ${result}`;
   };
 
   // parse condition: whether render the layer
   const parseCondition = (condition, render) => {
-    if (typeof condition === "boolean") {
+    if (typeof condition === 'boolean') {
       return `${condition} && ${render}`;
-    } else if (typeof condition === "string") {
+    } else if (typeof condition === 'string') {
       return `${condition.slice(2, -2)} && ${render}`;
     }
   };
@@ -180,8 +182,8 @@ module.exports = function(schema, option) {
   // parse loop render
   const parseLoop = (loop, loopArg, render) => {
     let data;
-    let loopArgItem = (loopArg && loopArg[0]) || "item";
-    let loopArgIndex = (loopArg && loopArg[1]) || "index";
+    let loopArgItem = (loopArg && loopArg[0]) || 'item';
+    let loopArgIndex = (loopArg && loopArg[1]) || 'index';
 
     if (Array.isArray(loop)) {
       data = toString(loop);
@@ -194,7 +196,7 @@ module.exports = function(schema, option) {
     render = `${render.slice(0, tagEnd)} key={${loopArgIndex}}${render.slice(tagEnd)}`;
 
     // remove `this`
-    const re = new RegExp(`this.${loopArgItem}`, "g");
+    const re = new RegExp(`this.${loopArgItem}`, 'g');
     render = render.replace(re, loopArgItem);
 
     return `${data}.map((${loopArgItem}, ${loopArgIndex}) => {
@@ -206,7 +208,7 @@ module.exports = function(schema, option) {
   const generateRender = (schema) => {
     const type = schema.componentName.toLowerCase();
     const className = schema.props && schema.props.className;
-    let classString = "";
+    let classString = '';
 
     if (className) {
       classString = ` style={styles.${className}}`;
@@ -216,26 +218,26 @@ module.exports = function(schema, option) {
     }
 
     let xml;
-    let props = "";
+    let props = '';
 
     Object.keys(schema.props).forEach((key) => {
-      if (["className", "style", "text", "src"].indexOf(key) === -1) {
+      if ([ 'className', 'style', 'text', 'src' ].indexOf(key) === -1) {
         props += ` ${key}={${parseProps(schema.props[key])}}`;
       }
     });
 
     switch (type) {
-      case "text":
+      case 'text':
         const innerText = parseProps(schema.props.text, true);
         xml = `<Text${classString}${props}>${innerText}</Text>`;
         break;
-      case "image":
+      case 'image':
         const source = parseProps(schema.props.src);
         xml = `<Image${classString}${props} source={{ uri: ${source} }} />`;
         break;
-      case "div":
-      case "page":
-      case "block":
+      case 'div':
+      case 'page':
+      case 'block':
         if (schema.children && schema.children.length) {
           xml = `<View${classString}${props}>${transform(schema.children)}</View>`;
         } else {
@@ -259,7 +261,7 @@ module.exports = function(schema, option) {
 
   // parse schema
   const transform = (schema) => {
-    let result = "";
+    let result = '';
 
     if (Array.isArray(schema)) {
       schema.forEach((layer) => {
@@ -268,17 +270,17 @@ module.exports = function(schema, option) {
     } else {
       const type = schema.componentName.toLowerCase();
 
-      if (["page", "block"].indexOf(type) !== -1) {
+      if ([ 'page', 'block' ].indexOf(type) !== -1) {
         // 容器组件处理: state/method/dataSource/lifeCycle/render
         const states = [];
         const lifeCycles = [];
         const methods = [];
         const init = [];
-        const render = [`return (`];
-        let classData = [`function ${schema.componentName}_${classes.length}() {`];
+        const render = [ `return (` ];
+        let classData = [ `function ${schema.componentName}_${classes.length}() {` ];
 
         if (schema.state) {
-          Object.keys(schema.state).forEach(key => {
+          Object.keys(schema.state).forEach((key) => {
             states.push(`const [${key}] = React.useState(${toString(schema.state[key])})`);
           });
         }
@@ -292,9 +294,9 @@ module.exports = function(schema, option) {
 
         if (schema.dataSource && Array.isArray(schema.dataSource.list)) {
           schema.dataSource.list.forEach((item) => {
-            if (typeof item.isInit === "boolean" && item.isInit) {
+            if (typeof item.isInit === 'boolean' && item.isInit) {
               init.push(`this.${item.id}();`);
-            } else if (typeof item.isInit === "string") {
+            } else if (typeof item.isInit === 'string') {
               init.push(`if (${parseProps(item.isInit)}) { this.${item.id}(); }`);
             }
             methods.push(parseDataSource(item));
@@ -307,14 +309,13 @@ module.exports = function(schema, option) {
           }
         }
 
-
         render.push(generateRender(schema));
         render.push(`)`);
 
         classData = classData.concat(states).concat(methods).concat(render);
-        classData.push("}");
+        classData.push('}');
 
-        classes.push(classData.join("\n"));
+        classes.push(classData.join('\n'));
       } else {
         result += generateRender(schema);
       }
@@ -327,7 +328,7 @@ module.exports = function(schema, option) {
   transform(schema);
 
   const prettierOpt = {
-    parser: "babel",
+    parser: 'babel',
     printWidth: 120,
     singleQuote: true
   };
@@ -336,16 +337,19 @@ module.exports = function(schema, option) {
     panelDisplay: [
       {
         panelName: `index.jsx`,
-        panelValue: prettier.format(`
+        panelValue: prettier.format(
+          `
           import React from 'react';
           import { View, Text, Image } from 'react-native';
-          ${imports.join("\n")}
-          ${utils.join("\n")}
-          export default ${classes.join("\n")}
+          ${imports.join('\n')}
+          ${utils.join('\n')}
+          export default ${classes.join('\n')}
           
           const styles = ${toString(style)}
-        `, prettierOpt),
-        panelType: "js"
+        `,
+          prettierOpt
+        ),
+        panelType: 'js'
       }
     ],
     noTemplate: true
