@@ -126,6 +126,8 @@ module.exports = function(schema, option) {
     } else if (typeof value === 'function') {
       const { params, content } = parseFunction(value);
       return `(${params}) => {${content}}`;
+    } else {
+      return value;
     }
   };
 
@@ -204,6 +206,14 @@ module.exports = function(schema, option) {
     })`;
   };
 
+  const genStyleCode = (styles, key='') => {
+    return !/-/.test(key) && key.trim()
+      ? `${styles}.${key}`
+      : `${styles}['${key}']`;
+  };
+  
+  console.log('rect')
+
   // generate render xml
   const generateRender = (schema) => {
     const type = schema.componentName.toLowerCase();
@@ -211,7 +221,7 @@ module.exports = function(schema, option) {
     let classString = '';
 
     if (className) {
-      classString = ` style={styles.${className}}`;
+      classString = ` style={${genStyleCode('styles', className)}}`;
       style[className] = parseStyle(schema.props.style, type);
     } else if (schema.props.style) {
       classString = ` style={${toString(parseStyle(schema.props.style, type))}}`;
